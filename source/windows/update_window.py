@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import json
 import os
+from pathlib import Path
 from typing import TypedDict
 
 import distro
@@ -133,6 +134,21 @@ class BlenderLauncherUpdater(BaseWindow):
         elif self.platform == "Linux":
             os.chmod(dist, 0o744)
             _popen('nohup "' + launcher + '"')
+        elif self.platform == "macOS":
+            # On macOS, dist is a directory containing the .app bundle
+            dist_path = Path(dist)
+
+            # Find the .app bundle in the extracted directory
+            app_bundles = list(dist_path.glob("*.app"))
+
+            if app_bundles:
+                # Use the 'open' command to launch the .app bundle
+                # This properly handles code signing and other macOS requirements
+                app_bundle = app_bundles[0]
+                _popen(["open", str(app_bundle)])
+            else:
+                # Fallback: try to find executable directly
+                _popen([launcher])
 
         self.app.quit()
 
